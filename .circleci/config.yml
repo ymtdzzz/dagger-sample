@@ -1,0 +1,26 @@
+version: 2.1
+jobs:
+  test-and-push:
+    machine: true
+    steps:
+      - run:
+          name: Install Dagger
+          command: |
+            cd /usr/local
+            curl -L https://dl.dagger.io/dagger/install.sh | sudo sh
+      - checkout
+      - run:
+          name: Dagger project update
+          command: dagger project update
+      - run:
+          name: Test
+          command: dagger do test --log-format=plain
+      - run:
+          name: Push to ECR
+          command: |
+            dagger do pushToECR --with 'actions: params: tag: "'"${CIRCLE_SHA1}"'"' --log-format=plain
+workflows:
+  version: 2
+  ci:
+    jobs:
+      - test-and-push
