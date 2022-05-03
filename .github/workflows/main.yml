@@ -1,0 +1,26 @@
+name: dagger-sample
+
+on: push
+
+jobs:
+  dagger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v2
+      - name: Install Dagger
+        uses: dagger/dagger-action@v2
+        with:
+          install-only: true
+      - name: Dagger project update
+        run: dagger project update
+      - name: Test
+        run: dagger do test --log-format=plain
+      - name: Push to ECR
+        run: |
+          echo "${ECR_REPOSITORY}"
+          dagger do pushToECR --with 'actions: params: tag: "'"${GITHUB_SHA}"'"' --log-format=plain
+        env:
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
